@@ -45,7 +45,6 @@
 #include <linux/crc16.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>
-#include <linux/efi.h>
 #include <linux/input.h>
 #include <linux/input/mt.h>
 #include <linux/jiffies.h>
@@ -107,9 +106,6 @@
 #define KBD_BL_LEVEL_SCALE	1000000U
 #define KBD_BL_LEVEL_ADJ	\
 	((KBD_BL_LEVEL_MAX - KBD_BL_LEVEL_MIN) * KBD_BL_LEVEL_SCALE / 255U)
-
-#define EFI_BL_LEVEL_NAME	L"KeyboardBacklightLevel"
-#define EFI_BL_LEVEL_GUID	EFI_GUID(0xa076d2af, 0x9678, 0x4386, 0x8b, 0x58, 0x1f, 0xc8, 0xef, 0x04, 0x16, 0x19)
 
 #define APPLE_FLAG_FKEY		0x01
 
