@@ -792,13 +792,16 @@ static struct appleib_device *appleib_alloc_device(struct acpi_device *acpi_dev)
 	return ib_dev;
 }
 
-static int appleib_probe(struct acpi_device *acpi)
+static int appleib_probe(struct platform_device *pdev)
 {
 	struct appleib_device *ib_dev;
 	int i;
 	int ret;
 
-	ib_dev = appleib_alloc_device(acpi);
+	struct device *dev = &pdev->dev;
+	struct acpi_device *device = ACPI_COMPANION(dev);
+
+	ib_dev = appleib_alloc_device(device);
 	if (IS_ERR_OR_NULL(ib_dev))
 		return PTR_ERR(ib_dev);
 
@@ -813,7 +816,7 @@ static int appleib_probe(struct acpi_device *acpi)
 		ib_dev->subdevs[i].pdata_size = sizeof(ib_dev->dev_data);
 	}
 
-	ret = devm_mfd_add_devices(&acpi->dev, PLATFORM_DEVID_NONE,
+	ret = devm_mfd_add_devices(&device->dev, PLATFORM_DEVID_NONE,
 				   ib_dev->subdevs, ARRAY_SIZE(ib_dev->subdevs),
 				   NULL, 0, NULL);
 	if (ret) {
@@ -838,14 +841,17 @@ static int appleib_probe(struct acpi_device *acpi)
 		return ret;
 	}
 
-	acpi->driver_data = ib_dev;
+	device->driver_data = ib_dev;
 
 	return 0;
 }
 
-static void appleib_remove(struct acpi_device *acpi)
+static void appleib_remove(struct platform_device *pdev)
 {
-	struct appleib_device *ib_dev = acpi_driver_data(acpi);
+	struct device *dev = &pdev->dev;
+	struct acpi_device *device = ACPI_COMPANION(dev);
+
+	struct appleib_device *ib_dev = acpi_driver_data(device);
 
 	hid_unregister_driver(&ib_dev->ib_driver);
 }
@@ -893,20 +899,16 @@ static const struct acpi_device_id appleib_acpi_match[] = {
 
 MODULE_DEVICE_TABLE(acpi, appleib_acpi_match);
 
-static struct acpi_driver appleib_driver = {
-	.name		= "apple-ibridge",
-	.class		= "topcase", /* ? */
-	.ids		= appleib_acpi_match,
-	.ops		= {
-		.add		= appleib_probe,
-		.remove		= appleib_remove,
-	},
-	.drv		= {
-		.pm		= &appleib_pm,
+static struct platform_driver appleib_driver = {
+	.probe      = appleib_probe,     /* функцию add нужно будет переименовать в probe */
+	.remove     = appleib_remove,
+	.driver     = {
+		.name               = "apple-ibridge",
+		.acpi_match_table   = appleib_acpi_match,
+		.pm                 = &appleib_pm,
 	},
 };
-
-module_acpi_driver(appleib_driver)
+module_platform_driver(appleib_driver);
 
 MODULE_AUTHOR("Ronald Tschalär");
 MODULE_DESCRIPTION("Apple iBridge driver");
